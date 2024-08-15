@@ -1,0 +1,25 @@
+{
+    "name": "cli-task-tracker",
+    "version": "1.0.0",
+    "description": "",
+    "main": "bin/index.ts",
+    "bin": {
+        "my-cli": "dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "start": "ts-node bin/index.ts",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "commander": "^12.1.0",
+        "typescript": "^5.5.4"
+    },
+    "devDependencies": {
+        "@types/node": "^22.3.0",
+        "ts-node": "^10.9.2"
+    }
+}
