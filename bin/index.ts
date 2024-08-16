@@ -1,18 +1,26 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-const program = new Command();
+import { TaskCommand } from "../src/commands/task.command";
 
-program
-	.name("my-cli")
-	.description("A simple CLI made with TypeScript")
-	.version("1.0.0");
+const bootstrap = async () => {
+	const program = new Command();
 
-program
-	.command("greet <name>")
-	.description("Greet someone by name")
-	.action((name: string) => {
-		console.log(`Hello, ${name}!`);
-	});
+	program
+		.name("my-cli")
+		.description("A Task Tracker CLI made with TypeScript")
+		.version("1.0.0");
 
-program.parse(process.argv);
+	program
+		.command("greet <name>")
+		.description("Greet someone by name")
+		.action((name: string) => {
+			console.log(`Hello, ${name}!`);
+		});
+
+	const taskCommandLoader = new TaskCommand();
+	await taskCommandLoader.load(program);
+	await program.parseAsync(process.argv);
+};
+
+bootstrap();
