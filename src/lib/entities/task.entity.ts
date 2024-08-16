@@ -6,10 +6,10 @@ export class Task {
 	@PrimaryGeneratedColumn()
 	id: number;
 
-	@Column()
+	@Column({ unique: true })
 	name: string;
 
-	@Column( {enum: Status})
+	@Column({ enum: Status })
 	status: string;
 
 	@Column()

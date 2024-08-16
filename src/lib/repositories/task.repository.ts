@@ -4,50 +4,96 @@ import { AppDataSource } from "../data-source";
 import { Task } from "../entities/task.entity";
 
 export class TaskRepository {
-	private readonly repository: Repository<Task>;
-	constructor() {
-		this.repository = AppDataSource.getRepository(Task);
+	private repository: Repository<Task>;
+
+	private constructor() {}
+
+	private static async initializeRepository(): Promise<TaskRepository> {
+		const instance = new TaskRepository();
+
+		if (!AppDataSource.isInitialized) {
+			await AppDataSource.initialize()
+				.then(() => {
+					console.log(
+						"DataSource has been initialized automatically!"
+					);
+				})
+				.catch((err) => {
+					console.error(
+						"Error during DataSource initialization:",
+						err
+					);
+					throw err;
+				});
+		}
+
+		instance.repository = AppDataSource.getRepository(Task);
+		return instance;
 	}
 
-	async createTask(task: Omit<Task, "id">) {
+	public static async createInstance(): Promise<TaskRepository> {
+		return this.initializeRepository();
+	}
+
+	private async closeConnection(): Promise<void> {
+		if (AppDataSource.isInitialized) {
+			await AppDataSource.destroy();
+			console.log("DataSource has been closed.");
+		}
+	}
+
+	async createTask(task: Omit<Task, "id">): Promise<number> {
 		const newTask = this.repository.create(task);
-        const {id} = await this.repository.save(newTask)
-        return id
+		const { id } = await this.repository.save(newTask);
+		await this.closeConnection();
+		return id;
 	}
 
-    async updateTask(id: number, newName: string) {
-        const task = await this.repository.findOneBy({id: id})
-        if (task) {
-            task.name = newName
-            const { id:updatedId } = await this.repository.save(task)
-            return updatedId
-        }
-        return -1
-    }
+	async updateTask(id: number, newName: string): Promise<number> {
+		const task = await this.repository.findOneBy({ id: id });
+		if (task) {
+			task.name = newName;
+			const { id: updatedId } = await this.repository.save(task);
+			await this.closeConnection();
+			return updatedId;
+		}
+		await this.closeConnection();
+		return -1;
+	}
 
-    async changeStatus(id: number, newStatus: string) {
-        const task = await this.repository.findOneBy({id: id})
-        if (task) {
-            task.status = newStatus
-            const {id: updatedId} = await this.repository.save(task)
-            return updatedId
-        }
-        return -1
-    }
+	async changeStatus(id: number, newStatus: string): Promise<number> {
+		const task = await this.repository.findOneBy({ id: id });
+		if (task) {
+			task.status = newStatus;
+			const { id: updatedId } = await this.repository.save(task);
+			await this.closeConnection();
+			return updatedId;
+		}
+		await this.closeConnection();
+		return -1;
+	}
 
-    async deleteTask(id: number) {
-        const removedTask = await this.repository.findOneBy({id:id})
-        if (removedTask) {
-            const {id: deleteTask} = await this.repository.remove(removedTask)
-            return deleteTask
-        }
-        return -1
-    }
+	async deleteTask(id: number): Promise<number> {
+		const removedTask = await this.repository.findOneBy({ id: id });
+		if (removedTask) {
+			const { id: deleteTask } = await this.repository.remove(
+				removedTask
+			);
+			await this.closeConnection();
+			return deleteTask;
+		}
+		await this.closeConnection();
+		return -1;
+	}
 
-    async showLists(status: string | null) {
-        if (status) {
-            return await this.repository.findBy({status: status})
-        }
-        return await this.repository.find()
-    }
+	async showLists(status: string | null = null): Promise<Task[]> {
+		if (status) {
+			const tasks = await this.repository.findBy({ status: status });
+			await this.closeConnection();
+			return tasks;
+		}
+		const allTasks = await this.repository.find();
+		await this.closeConnection();
+		return allTasks;
+	}
 }
