@@ -53,6 +53,7 @@ export class TaskRepository {
 		const task = await this.repository.findOneBy({ id: id });
 		if (task) {
 			task.name = newName;
+			task.updatedAt = new Date();
 			const { id: updatedId } = await this.repository.save(task);
 			await this.closeConnection();
 			return updatedId;
@@ -65,6 +66,7 @@ export class TaskRepository {
 		const task = await this.repository.findOneBy({ id: id });
 		if (task) {
 			task.status = newStatus;
+			task.updatedAt = new Date();
 			const { id: updatedId } = await this.repository.save(task);
 			await this.closeConnection();
 			return updatedId;
@@ -76,11 +78,9 @@ export class TaskRepository {
 	async deleteTask(id: number): Promise<number> {
 		const removedTask = await this.repository.findOneBy({ id: id });
 		if (removedTask) {
-			const { id: deleteTask } = await this.repository.remove(
-				removedTask
-			);
+			await this.repository.remove(removedTask);
 			await this.closeConnection();
-			return deleteTask;
+			return id;
 		}
 		await this.closeConnection();
 		return -1;
